@@ -20,6 +20,30 @@ namespace pis1
         }
     }
 
+    class FuelPriceWithSupplier
+    {
+        public FuelPrice BasePrice { get; set; }
+        public string SupplierCompany {  get; set; }
+        public string ContactNomber { get; set; }
+
+        public string GetSupplierInfo()
+        {
+            return $"Поставщик: {SupplierCompany}\n" + $"Договор: {ContactNomber}\n" + $"Информация о топливе: {BasePrice.GetInfo()}";
+        }
+    }
+
+    class FuelSalesStats
+    {
+        public FuelPrice FuelType { get; set; }
+        public double TotalLitersSold { get; set; }
+        public double TotalRevenue {  get; set; }
+
+        public string GetStatsInfo()
+        {
+            return $"Статистика продаж: {FuelType.Type}\n" + $"Продано: {TotalLitersSold} л\n" + $"Выручка: {TotalRevenue} руб.\n" + $"Текущая цена: {FuelType.Cost} руб./л";
+        }
+    }
+
     class GasStation
     {
         public string Name { get; set; }
@@ -36,13 +60,14 @@ namespace pis1
             int count = Convert.ToInt32(Console.ReadLine());
 
             FuelPrice[] fuels = new FuelPrice[count];
+            int currentIndex = 0;
 
 
             while (count > 0)
             {
                 count--;
 
-                Console.WriteLine("Введите свойства топлива в формате: вид топлива, гггг.мм.дд, цена");
+                Console.WriteLine("\nВведите свойства топлива в формате: вид топлива, гггг.мм.дд, цена");
 
                 string input = Console.ReadLine();
 
@@ -58,9 +83,6 @@ namespace pis1
                 price.Type = parts[0];
 
 
-                
-
-
                 string[] dateParts = parts[1].Split('.');
                 price.Date = new DateTime(
                     int.Parse(dateParts[0]),
@@ -70,14 +92,56 @@ namespace pis1
 
                 price.Cost = double.Parse(parts[2]);
 
-                Console.WriteLine("Результат:");
+                Console.WriteLine("\nИНФОРМАЦИЯ О ТОПЛИВЕ");
                 string result = price.GetInfo();
                 Console.WriteLine(result);
 
-                
-                fuels.Append(price);
+
+                fuels[currentIndex] = price;
+                currentIndex++;
 
             }
+
+            Console.WriteLine("\nВВОД ДАННЫХ О ПОСТАВЩИКЕ");   
+            Console.WriteLine("Введите номер типа топлива для поставщика (от 1 до {0}):", fuels.Length);
+            int fuelIndex1 = Convert.ToInt32(Console.ReadLine()) - 1;
+
+            Console.WriteLine("Введите название компании-поставщика:");
+            string supplier = Console.ReadLine();
+
+            Console.WriteLine("Введите номер договора:");
+            string contract = Console.ReadLine();
+
+            FuelPriceWithSupplier supplierInfo = new FuelPriceWithSupplier()
+            {
+                BasePrice = fuels[fuelIndex1],
+                SupplierCompany = supplier,
+                ContactNomber = contract,
+            };
+
+            Console.WriteLine("\nИНФОРМАЦИЯ О ПОСТАВЩИКЕ");
+            Console.WriteLine(supplierInfo.GetSupplierInfo());
+
+            Console.WriteLine("\nВВОД СТАТИСТИКИ ПРОДАЖ");
+            Console.WriteLine("Введите номер типа топлива для статистики (от 1 до {0}):", fuels.Length);
+            int fuelIndex2 = Convert.ToInt32(Console.ReadLine()) - 1;
+
+            Console.WriteLine("Введите количество проданных литров:");
+            double liters = Convert.ToDouble(Console.ReadLine());
+
+            Console.WriteLine("Введите общую выручку:");
+            double revenue = Convert.ToDouble(Console.ReadLine());
+
+            FuelSalesStats salesStats = new FuelSalesStats
+            {
+                FuelType = fuels[fuelIndex2],
+                TotalLitersSold = liters,
+                TotalRevenue = revenue
+            };
+
+            Console.WriteLine("\nСТАТИСТИКА ПРОДАЖ");
+            Console.WriteLine(salesStats.GetStatsInfo());
+
 
         }
     }
