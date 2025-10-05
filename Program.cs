@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace pis1
 {
@@ -55,93 +56,143 @@ namespace pis1
         static void Main(string[] args)
         {
 
-            Console.WriteLine("Сколько типов топлива вы хотите ввести?");
+            Console.WriteLine("1 - Ручной ввод\n2 - Загрузка из файла");
+            int choice = Convert.ToInt32(Console.ReadLine());
 
-            int count = Convert.ToInt32(Console.ReadLine());
+            FuelPrice[] fuels = Array.Empty<FuelPrice>();
 
-            FuelPrice[] fuels = new FuelPrice[count];
-            int currentIndex = 0;
-
-
-            while (count > 0)
+            if (choice == 1)
             {
-                count--;
 
-                Console.WriteLine("\nВведите свойства топлива в формате: вид топлива, гггг.мм.дд, цена");
+                Console.WriteLine("Сколько типов топлива вы хотите ввести?");
+                int count = Convert.ToInt32(Console.ReadLine());
 
-                string input = Console.ReadLine();
+                fuels = new FuelPrice[count];
+                int currentIndex = 0;
 
-                string[] parts = input.Split(',');
 
-                for (int i = 0; i < parts.Length; i++)
+                while (count > 0)
                 {
-                    parts[i] = parts[i].Trim();
+                    count--;
+
+                    Console.WriteLine("\nВведите свойства топлива в формате: вид топлива, гггг.мм.дд, цена");
+                    string input = Console.ReadLine();
+                    string[] parts = input.Split(',');
+
+                    for (int i = 0; i < parts.Length; i++)
+                    {
+                        parts[i] = parts[i].Trim();
+                    }
+
+                    FuelPrice price = new FuelPrice();
+
+                    price.Type = parts[0];
+
+
+                    string[] dateParts = parts[1].Split('.');
+                    price.Date = new DateTime(
+                        int.Parse(dateParts[0]),
+                        int.Parse(dateParts[1]),
+                        int.Parse(dateParts[2])
+                    );
+
+                    price.Cost = double.Parse(parts[2]);
+
+                    Console.WriteLine("\nИНФОРМАЦИЯ О ТОПЛИВЕ");
+                    string result = price.GetInfo();
+                    Console.WriteLine(result);
+
+
+                    fuels[currentIndex] = price;
+                    currentIndex++;
+
                 }
-
-                FuelPrice price = new FuelPrice();
-
-                price.Type = parts[0];
-
-
-                string[] dateParts = parts[1].Split('.');
-                price.Date = new DateTime(
-                    int.Parse(dateParts[0]),
-                    int.Parse(dateParts[1]),
-                    int.Parse(dateParts[2])
-                );
-
-                price.Cost = double.Parse(parts[2]);
-
-                Console.WriteLine("\nИНФОРМАЦИЯ О ТОПЛИВЕ");
-                string result = price.GetInfo();
-                Console.WriteLine(result);
-
-
-                fuels[currentIndex] = price;
-                currentIndex++;
-
             }
 
-            Console.WriteLine("\nВВОД ДАННЫХ О ПОСТАВЩИКЕ");   
-            Console.WriteLine("Введите номер типа топлива для поставщика (от 1 до {0}):", fuels.Length);
-            int fuelIndex1 = Convert.ToInt32(Console.ReadLine()) - 1;
-
-            Console.WriteLine("Введите название компании-поставщика:");
-            string supplier = Console.ReadLine();
-
-            Console.WriteLine("Введите номер договора:");
-            string contract = Console.ReadLine();
-
-            FuelPriceWithSupplier supplierInfo = new FuelPriceWithSupplier()
+            else if (choice == 2)
             {
-                BasePrice = fuels[fuelIndex1],
-                SupplierCompany = supplier,
-                ContactNomber = contract,
-            };
+                Console.WriteLine("Введите путь к файлу");
+                string fileName = Console.ReadLine();
 
-            Console.WriteLine("\nИНФОРМАЦИЯ О ПОСТАВЩИКЕ");
-            Console.WriteLine(supplierInfo.GetSupplierInfo());
+                if (File.Exists(fileName))
+                {
+                    string[] lines = File.ReadAllLines(fileName);
+                    fuels = new FuelPrice[lines.Length];
 
-            Console.WriteLine("\nВВОД СТАТИСТИКИ ПРОДАЖ");
-            Console.WriteLine("Введите номер типа топлива для статистики (от 1 до {0}):", fuels.Length);
-            int fuelIndex2 = Convert.ToInt32(Console.ReadLine()) - 1;
+                    for (int i = 0;i < lines.Length;i++)
+                    {
+                        string[] parts = lines[i].Split(',');
+                        for (int j = 0; j < parts.Length; j++)
+                        {
+                            parts[j] = parts[j].Trim();
+                        }
 
-            Console.WriteLine("Введите количество проданных литров:");
-            double liters = Convert.ToDouble(Console.ReadLine());
+                        string[] dateParts = parts[1].Split('.');
+                        fuels[i] = new FuelPrice
+                        {
+                            Type = parts[0],
+                            Date = new DateTime(
+                                int.Parse(dateParts[0]),
+                                int.Parse(dateParts[1]),
+                                int.Parse(dateParts[2])
+                            ),
+                            Cost = double.Parse(parts[2])
+                        };
+                        Console.WriteLine(fuels[i].GetInfo());
+                    }
 
-            Console.WriteLine("Введите общую выручку:");
-            double revenue = Convert.ToDouble(Console.ReadLine());
+                }
+                else
+                {
+                    Console.WriteLine("Файл не найден");
+                    return;
+                }
+            }
 
-            FuelSalesStats salesStats = new FuelSalesStats
+            if (fuels.Length > 0)
             {
-                FuelType = fuels[fuelIndex2],
-                TotalLitersSold = liters,
-                TotalRevenue = revenue
-            };
 
-            Console.WriteLine("\nСТАТИСТИКА ПРОДАЖ");
-            Console.WriteLine(salesStats.GetStatsInfo());
+                Console.WriteLine("\nВВОД ДАННЫХ О ПОСТАВЩИКЕ");
+                Console.WriteLine("Введите номер типа топлива для поставщика (от 1 до {0}):", fuels.Length);
+                int fuelIndex1 = Convert.ToInt32(Console.ReadLine()) - 1;
 
+                Console.WriteLine("Введите название компании-поставщика:");
+                string supplier = Console.ReadLine();
+
+                Console.WriteLine("Введите номер договора:");
+                string contract = Console.ReadLine();
+
+                FuelPriceWithSupplier supplierInfo = new FuelPriceWithSupplier()
+                {
+                    BasePrice = fuels[fuelIndex1],
+                    SupplierCompany = supplier,
+                    ContactNomber = contract,
+                };
+
+                Console.WriteLine("\nИНФОРМАЦИЯ О ПОСТАВЩИКЕ");
+                Console.WriteLine(supplierInfo.GetSupplierInfo());
+
+                Console.WriteLine("\nВВОД СТАТИСТИКИ ПРОДАЖ");
+                Console.WriteLine("Введите номер типа топлива для статистики (от 1 до {0}):", fuels.Length);
+                int fuelIndex2 = Convert.ToInt32(Console.ReadLine()) - 1;
+
+                Console.WriteLine("Введите количество проданных литров:");
+                double liters = Convert.ToDouble(Console.ReadLine());
+
+                Console.WriteLine("Введите общую выручку:");
+                double revenue = Convert.ToDouble(Console.ReadLine());
+
+                FuelSalesStats salesStats = new FuelSalesStats
+                {
+                    FuelType = fuels[fuelIndex2],
+                    TotalLitersSold = liters,
+                    TotalRevenue = revenue
+                };
+
+                Console.WriteLine("\nСТАТИСТИКА ПРОДАЖ");
+                Console.WriteLine(salesStats.GetStatsInfo());
+
+            }
 
         }
     }
